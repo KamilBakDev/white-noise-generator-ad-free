@@ -27,8 +27,6 @@ interface NoiseGeneratorReturn {
 }
 
 const NOISE_TYPES: NoiseType[] = ['white', 'pink', 'brown', 'blue', 'violet', 'grey'];
-const FADE_DURATION_MS = 400;
-const FADE_STEPS = 16;
 
 export function useNoiseGenerator(): NoiseGeneratorReturn {
   const playerRefs = useRef<Partial<Record<NoiseType, AudioPlayer>>>({});
@@ -77,7 +75,7 @@ export function useNoiseGenerator(): NoiseGeneratorReturn {
       return fileCache.current[type]!;
     }
 
-    const file = new File(Paths.cache, `noise_${type}.wav`);
+    const file = new File(Paths.cache, `noise_v3_${type}.wav`);
 
     if (file.exists) {
       fileCache.current[type] = file.uri;
@@ -95,24 +93,6 @@ export function useNoiseGenerator(): NoiseGeneratorReturn {
     return file.uri;
   }, []);
 
-  const fadeVolume = useCallback(
-    async (player: AudioPlayer, fromVol: number, toVol: number) => {
-      const stepDuration = FADE_DURATION_MS / FADE_STEPS;
-      const stepSize = (toVol - fromVol) / FADE_STEPS;
-
-      for (let i = 1; i <= FADE_STEPS; i++) {
-        const vol = fromVol + stepSize * i;
-        try {
-          player.volume = Math.max(0, Math.min(1, vol));
-        } catch {
-          break;
-        }
-        await new Promise<void>((resolve) => setTimeout(resolve, stepDuration));
-      }
-    },
-    []
-  );
-
   const play = useCallback(
     async (noiseType: NoiseType) => {
       setPlayers((prev) => ({
@@ -122,22 +102,19 @@ export function useNoiseGenerator(): NoiseGeneratorReturn {
 
       try {
         let player = playerRefs.current[noiseType];
+        const targetVol = playersRef.current[noiseType].volume * masterVolumeRef.current;
 
         if (!player) {
           const fileUri = await getOrCreateWavFile(noiseType);
           player = createAudioPlayer(fileUri);
           player.loop = true;
-          player.volume = 0;
+          player.volume = targetVol;
           playerRefs.current[noiseType] = player;
           player.play();
         } else {
-          player.volume = 0;
-          player.seekTo(0);
+          player.volume = targetVol;
           player.play();
         }
-
-        const targetVol = playersRef.current[noiseType].volume * masterVolumeRef.current;
-        await fadeVolume(player, 0, targetVol);
 
         setPlayers((prev) => ({
           ...prev,
@@ -152,7 +129,7 @@ export function useNoiseGenerator(): NoiseGeneratorReturn {
         }));
       }
     },
-    [getOrCreateWavFile, fadeVolume]
+    [getOrCreateWavFile]
   );
 
   const pause = useCallback(

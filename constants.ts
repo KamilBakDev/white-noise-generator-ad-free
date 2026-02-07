@@ -1,5 +1,5 @@
 export const SAMPLE_RATE = 44100;
-export const BUFFER_DURATION_SECONDS = 5;
+export const BUFFER_DURATION_SECONDS = 30;
 export const NUM_SAMPLES = SAMPLE_RATE * BUFFER_DURATION_SECONDS;
 export const BITS_PER_SAMPLE = 16;
 export const NUM_CHANNELS = 1;

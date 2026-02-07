@@ -135,14 +135,6 @@ export function generateNoiseSamples(type: NoiseType): Float32Array {
       break;
   }
 
-  // Apply fade-in and fade-out to avoid clicks when looping
-  const fadeSamples = Math.floor(SAMPLE_RATE * 0.05); // 50ms fade
-  for (let i = 0; i < fadeSamples; i++) {
-    const gain = i / fadeSamples;
-    samples[i] *= gain;
-    samples[samples.length - 1 - i] *= gain;
-  }
-
   return samples;
 }
 
