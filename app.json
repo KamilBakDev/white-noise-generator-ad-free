@@ -31,7 +31,8 @@
       },
       "permissions": [
         "android.permission.FOREGROUND_SERVICE",
-        "android.permission.WAKE_LOCK"
+        "android.permission.WAKE_LOCK",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "versionCode": 1
     },
@@ -57,8 +58,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "your-project-id-here"
+        "projectId": "4a6d98ce-f028-422f-8890-cf5e11390e2a"
       }
-    }
+    },
+    "owner": "kbak"
   }
 }
