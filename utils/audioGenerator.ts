@@ -185,33 +185,3 @@ function writeString(view: DataView, offset: number, str: string): void {
   }
 }
 
-export function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  const chunkSize = 8192;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, i + chunkSize);
-    for (let j = 0; j < chunk.length; j++) {
-      binary += String.fromCharCode(chunk[j]);
-    }
-  }
-  // Use btoa if available (React Native has it via hermes)
-  if (typeof btoa !== 'undefined') {
-    return btoa(binary);
-  }
-  // Fallback manual base64
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let result = '';
-  let i = 0;
-  while (i < binary.length) {
-    const a = binary.charCodeAt(i++);
-    const b = i < binary.length ? binary.charCodeAt(i++) : 0;
-    const c = i < binary.length ? binary.charCodeAt(i++) : 0;
-    const triplet = (a << 16) | (b << 8) | c;
-    result += chars[(triplet >> 18) & 0x3F];
-    result += chars[(triplet >> 12) & 0x3F];
-    result += i - 2 < binary.length ? chars[(triplet >> 6) & 0x3F] : '=';
-    result += i - 1 < binary.length ? chars[triplet & 0x3F] : '=';
-  }
-  return result;
-}

@@ -9,7 +9,7 @@ White Noise Generator Ad-Free
 
 ## Short Description (max 80 chars)
 ```
-Sleep better with 6 types of noise. No ads, no tracking, works offline.
+Sleep better and relax with 6 types of noise. No ads, no tracking, works offline
 ```
 
 ## Full Description (max 4000 chars)
