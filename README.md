@@ -46,45 +46,6 @@ npx expo start --android
 npx expo start
 ```
 
-## Building for Google Play Store
-
-### 1. Configure EAS
-
-```bash
-# Login to Expo account
-eas login
-
-# Configure project (first time only)
-eas build:configure
-```
-
-### 2. Build APK (for testing)
-
-```bash
-eas build --platform android --profile preview
-```
-
-### 3. Build AAB (for Play Store)
-
-```bash
-eas build --platform android --profile production
-```
-
-### 4. Submit to Play Store
-
-```bash
-# Automatic submission (requires google-services.json)
-eas submit --platform android --profile production
-
-# Or manually:
-# 1. Download the .aab file from EAS dashboard
-# 2. Go to https://play.google.com/console
-# 3. Create a new app ($25 one-time developer fee)
-# 4. Upload the .aab file under "Production" > "Create new release"
-# 5. Fill in store listing (title, description, screenshots)
-# 6. Submit for review (typically <1h for new apps)
-```
-
 ### 5. Play Store Listing Info
 
 - **Title**: White Noise Generator Ad-Free
