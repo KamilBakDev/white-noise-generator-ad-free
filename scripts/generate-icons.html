@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Icon Generator — White Noise Generator</title>
+    <style>
+        body { background: #1a1a2e; color: #fff; font-family: sans-serif; padding: 2rem; }
+        h1 { margin-bottom: 1rem; }
+        .grid { display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-end; }
+        .item { text-align: center; }
+        .item p { margin-top: 0.5rem; font-size: 0.85rem; color: #aaa; }
+        canvas { border: 1px solid #333; border-radius: 12px; }
+        button { margin-top: 1rem; padding: 0.7rem 1.5rem; background: #bb86fc; color: #000; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: bold; }
+        button:hover { background: #ce9efc; }
+        .instructions { margin-top: 2rem; background: #16213e; padding: 1.5rem; border-radius: 12px; max-width: 700px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <h1>White Noise Generator — Icon Generator</h1>
+    <p>Click each button to download the PNG file. Then replace the files in <code>assets/images/</code>.</p>
+
+    <div class="grid">
+        <div class="item">
+            <canvas id="icon" width="1024" height="1024"></canvas>
+            <p>icon.png (1024x1024)</p>
+            <button onclick="download('icon', 'icon.png')">Download icon.png</button>
+        </div>
+        <div class="item">
+            <canvas id="adaptive" width="1024" height="1024"></canvas>
+            <p>adaptive-icon.png (1024x1024)</p>
+            <button onclick="download('adaptive', 'adaptive-icon.png')">Download adaptive-icon.png</button>
+        </div>
+        <div class="item">
+            <canvas id="splash" width="1284" height="2778"></canvas>
+            <p>splash.png (1284x2778)</p>
+            <button onclick="download('splash', 'splash.png')">Download splash.png</button>
+        </div>
+        <div class="item">
+            <canvas id="favicon" width="48" height="48"></canvas>
+            <p>favicon.png (48x48)</p>
+            <button onclick="download('favicon', 'favicon.png')">Download favicon.png</button>
+        </div>
+        <div class="item">
+            <canvas id="feature" width="1024" height="500"></canvas>
+            <p>feature-graphic.png (1024x500)</p>
+            <button onclick="download('feature', 'feature-graphic.png')">Download feature-graphic.png</button>
+        </div>
+        <div class="item">
+            <canvas id="playstore-icon" width="512" height="512"></canvas>
+            <p>play-store-icon.png (512x512)</p>
+            <button onclick="download('playstore-icon', 'play-store-icon.png')">Download play-store-icon.png</button>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <strong>After downloading:</strong><br>
+        1. Replace <code>assets/images/icon.png</code> with downloaded icon.png<br>
+        2. Replace <code>assets/images/adaptive-icon.png</code> with downloaded adaptive-icon.png<br>
+        3. Replace <code>assets/images/splash.png</code> with downloaded splash.png<br>
+        4. Replace <code>assets/images/favicon.png</code> with downloaded favicon.png<br>
+        5. Upload <code>feature-graphic.png</code> to Play Console → Store listing → Feature graphic<br>
+        6. Upload <code>play-store-icon.png</code> to Play Console → Store listing → App icon (512x512)<br>
+        7. Rebuild: <code>npx eas-cli build --platform android --profile production</code>
+    </div>
+
+    <script>
+        const BG_COLOR = '#121212';
+        const ACCENT = '#bb86fc';
+        const ACCENT2 = '#6C63FF';
+        const WHITE = '#ffffff';
+
+        function drawWaveform(ctx, cx, cy, radius, color, lineWidth, waves) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = 'round';
+            for (let w = 0; w < waves; w++) {
+                const r = radius - w * lineWidth * 2.2;
+                if (r <= 0) break;
+                ctx.beginPath();
+                const segments = 80;
+                const amplitude = r * 0.12;
+                const freq = 6 + w * 2;
+                for (let i = 0; i <= segments; i++) {
+                    const angle = (i / segments) * Math.PI * 2;
+                    const noise = Math.sin(angle * freq + w * 1.5) * amplitude;
+                    const x = cx + Math.cos(angle) * (r + noise);
+                    const y = cy + Math.sin(angle) * (r + noise);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.globalAlpha = 1 - w * 0.15;
+                ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function drawSoundBars(ctx, cx, cy, size, color) {
+            const barCount = 5;
+            const barWidth = size * 0.06;
+            const gap = size * 0.1;
+            const heights = [0.3, 0.55, 0.8, 0.55, 0.3];
+            const totalWidth = barCount * barWidth + (barCount - 1) * gap;
+            const startX = cx - totalWidth / 2;
+
+            ctx.fillStyle = color;
+            ctx.lineCap = 'round';
+            for (let i = 0; i < barCount; i++) {
+                const h = size * heights[i] * 0.4;
+                const x = startX + i * (barWidth + gap);
+                const y = cy - h / 2;
+                const r = barWidth / 2;
+                ctx.beginPath();
+                ctx.roundRect(x, y, barWidth, h, r);
+                ctx.fill();
+            }
+        }
+
+        function drawMoonIcon(ctx, cx, cy, radius, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = BG_COLOR;
+            ctx.beginPath();
+            ctx.arc(cx + radius * 0.35, cy - radius * 0.15, radius * 0.75, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const s = size || canvas.width;
+
+            // Background
+            const grad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s*0.7);
+            grad.addColorStop(0, '#1e1e3f');
+            grad.addColorStop(1, BG_COLOR);
+            ctx.fillStyle = grad;
+            if (canvasId === 'icon' || canvasId === 'playstore-icon' || canvasId === 'favicon') {
+                ctx.beginPath();
+                ctx.roundRect(0, 0, s, s, s * 0.18);
+                ctx.fill();
+            } else {
+                ctx.fillRect(0, 0, s, s);
+            }
+
+            // Waveform rings
+            drawWaveform(ctx, s/2, s/2, s * 0.35, ACCENT, s * 0.015, 5);
+
+            // Sound bars in center
+            drawSoundBars(ctx, s/2, s/2, s, WHITE);
+
+            // Small moon
+            drawMoonIcon(ctx, s * 0.78, s * 0.22, s * 0.08, ACCENT);
+
+            // Subtle stars
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            const stars = [[0.15, 0.18], [0.85, 0.15], [0.12, 0.82], [0.88, 0.85], [0.25, 0.4], [0.75, 0.6]];
+            for (const [sx, sy] of stars) {
+                ctx.beginPath();
+                ctx.arc(s * sx, s * sy, s * 0.008, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawAdaptiveIcon() {
+            const canvas = document.getElementById('adaptive');
+            const ctx = canvas.getContext('2d');
+            const s = 1024;
+
+            // Adaptive icon: no rounded corners (system applies mask)
+            const grad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s*0.7);
+            grad.addColorStop(0, '#1e1e3f');
+            grad.addColorStop(1, BG_COLOR);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, s, s);
+
+            drawWaveform(ctx, s/2, s/2, s * 0.3, ACCENT, s * 0.015, 5);
+            drawSoundBars(ctx, s/2, s/2, s, WHITE);
+            drawMoonIcon(ctx, s * 0.75, s * 0.25, s * 0.07, ACCENT);
+
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            const stars = [[0.18, 0.2], [0.82, 0.18], [0.15, 0.8], [0.85, 0.82]];
+            for (const [sx, sy] of stars) {
+                ctx.beginPath();
+                ctx.arc(s * sx, s * sy, s * 0.007, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawSplash() {
+            const canvas = document.getElementById('splash');
+            const ctx = canvas.getContext('2d');
+            const w = 1284, h = 2778;
+
+            const grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, h*0.5);
+            grad.addColorStop(0, '#1e1e3f');
+            grad.addColorStop(1, BG_COLOR);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+
+            const iconSize = 300;
+            drawWaveform(ctx, w/2, h/2 - 80, iconSize * 0.7, ACCENT, 6, 5);
+            drawSoundBars(ctx, w/2, h/2 - 80, iconSize * 2, WHITE);
+
+            // App name
+            ctx.fillStyle = WHITE;
+            ctx.font = 'bold 64px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('White Noise', w/2, h/2 + 200);
+            ctx.fillStyle = ACCENT;
+            ctx.font = '42px -apple-system, sans-serif';
+            ctx.fillText('Generator', w/2, h/2 + 260);
+        }
+
+        function drawFeatureGraphic() {
+            const canvas = document.getElementById('feature');
+            const ctx = canvas.getContext('2d');
+            const w = 1024, h = 500;
+
+            const grad = ctx.createLinearGradient(0, 0, w, h);
+            grad.addColorStop(0, '#1e1e3f');
+            grad.addColorStop(0.5, '#121230');
+            grad.addColorStop(1, BG_COLOR);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+
+            // Waveform on left
+            drawWaveform(ctx, 200, h/2, 140, ACCENT, 4, 5);
+            drawSoundBars(ctx, 200, h/2, 350, WHITE);
+
+            // Text on right
+            ctx.fillStyle = WHITE;
+            ctx.font = 'bold 48px -apple-system, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('White Noise', 420, h/2 - 40);
+            ctx.fillStyle = ACCENT;
+            ctx.font = 'bold 48px -apple-system, sans-serif';
+            ctx.fillText('Generator', 420, h/2 + 20);
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.font = '24px -apple-system, sans-serif';
+            ctx.fillText('Ad-Free • 6 Noise Types • Sleep Timer', 420, h/2 + 70);
+
+            // Moon
+            drawMoonIcon(ctx, w - 80, 80, 40, ACCENT);
+
+            // Stars
+            ctx.fillStyle = 'rgba(255,255,255,0.25)';
+            const stars = [[0.85, 0.7], [0.92, 0.4], [0.7, 0.15], [0.6, 0.85]];
+            for (const [sx, sy] of stars) {
+                ctx.beginPath();
+                ctx.arc(w * sx, h * sy, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Draw all
+        drawIcon('icon');
+        drawAdaptiveIcon();
+        drawSplash();
+        drawIcon('favicon');
+        drawFeatureGraphic();
+        drawIcon('playstore-icon');
+
+        function download(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
